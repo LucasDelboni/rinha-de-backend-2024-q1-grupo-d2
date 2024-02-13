@@ -37,7 +37,7 @@ fun Application.configureRouting() {
             if (request.descricao.isNullOrBlank() || request.descricao.length > 10) {
                 call.respond(HttpStatusCode.UnprocessableEntity)
             }
-            if (clienteId < 1 || clienteId < 5) {
+            if (!service.clienteExists(clienteId)) {
                 call.respond(HttpStatusCode.NotFound)
             }
             try {
