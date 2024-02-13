@@ -17,48 +17,15 @@ enum class TipoDeTransacao(val value: Boolean) {
     }
 }
 @Serializable
-data class Cliente(val id: Long, val nome: String, val limite: Int, val saldo: Int = 0)
-@Serializable
 data class Transacao(val valor: Int, val tipo: TipoDeTransacao, val descricao: String, val realizada_em: @Serializable( with = KZonedDateTimeSerializer::class) ZonedDateTime)
 @Serializable
 data class Saldo(val limite: Int, val saldo: Int)
 class RinhaService(private val connection: Connection) {
     companion object {
-        private const val DROP_CLIENTES = "DROP TABLE IF EXISTS clientes;"
-        private const val DROP_TRANSACAO = "DROP TABLE IF EXISTS transacoes;"
-        private const val CREATE_TABLE_CLIENTES = """
-            CREATE TABLE clientes (
-                id BIGSERIAL PRIMARY KEY,
-                nome VARCHAR(50) NOT NULL,--50 é o suficiente?
-                limite NUMERIC NOT NULL,
-                saldo NUMERIC NOT NULL DEFAULT 0,
-                CONSTRAINT saldo_nao_negativo check (saldo < limite)
-            );
-        """
-        private const val CREATE_TABLE_TRANSACOES = """
-            CREATE TABLE transacoes (
-                id BIGSERIAL PRIMARY KEY,
-                cliente_id BIGINT NOT NULL,
-                valor NUMERIC NOT NULL,
-                tipo BOOLEAN NOT NULL,--1 se D, 0 se C
-                descricao VARCHAR(10) NOT NULL,
-                realizada_em TIMESTAMP NOT NULL DEFAULT NOW(),
-                CONSTRAINT fk_clientes_transacoes_id FOREIGN KEY (cliente_id) REFERENCES clientes(id)
-            );
-        """
-        private const val INSERT_CLIENTES = """
-            INSERT INTO clientes (nome, limite)
-              VALUES
-                ('o barato sai caro', 1000 * 100),
-                ('zan corp ltda', 800 * 100),
-                ('les cruders', 10000 * 100),
-                ('padaria joia de cocaia', 100000 * 100),
-                ('kid mais', 5000 * 100);
-        """
         private val CLEINTE_EXISTS = """SELECT EXISTS(SELECT 1 FROM clientes WHERE id = ?)"""
         private const val INSERT_TRANSACAO = """INSERT INTO transacoes (cliente_id, valor, tipo, descricao) VALUES (?, ?, ?, ?)"""
-        private val SELECT_SALDO = """SELECT saldo, limite FROM clientes WHERE id = ?"""
-        private val SELECT_LAST_TRANSACOES = """SELECT valor, tipo, descricao, realizada_em FROM transacoes WHERE cliente_id = ? ORDER BY id DESC LIMIT 10"""
+        private const val SELECT_SALDO = """SELECT saldo, limite FROM clientes WHERE id = ?"""
+        private const val SELECT_LAST_TRANSACOES = """SELECT valor, tipo, descricao, realizada_em FROM transacoes WHERE cliente_id = ? ORDER BY id DESC LIMIT 10"""
         private const val UPDATE_NEW_SALDO = """
             UPDATE clientes
             SET saldo = saldo + ?
@@ -129,13 +96,14 @@ class RinhaService(private val connection: Connection) {
     }
 
     fun getNewSaldo(clienteId: Long, transacao: TransacaoRequest): Saldo {
+        val valor = transacao.valor.toInt()
         val amount = when (TipoDeTransacao.valueOf(transacao.tipo)) {
-            TipoDeTransacao.c -> transacao.valor
-            TipoDeTransacao.d -> transacao.valor * -1
+            TipoDeTransacao.c -> valor
+            TipoDeTransacao.d -> valor * -1
         }
         val statement = connection.prepareStatement(CREATE_TRANSACAO)
         statement.setLong(1, clienteId)
-        statement.setInt(2, transacao.valor)
+        statement.setInt(2, valor)
         statement.setBoolean(3, TipoDeTransacao.valueOf(transacao.tipo).value)
         statement.setString(4, transacao.descricao)
         statement.setInt(5, amount)

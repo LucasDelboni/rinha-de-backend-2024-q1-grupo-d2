@@ -37,6 +37,7 @@ fun Application.configureRouting() {
             if (request.descricao.isNullOrBlank() || request.descricao.length > 10) {
                 call.respond(HttpStatusCode.UnprocessableEntity)
             }
+            request.valor.toIntOrNull() ?: call.respond(HttpStatusCode.UnprocessableEntity)
             if (!service.clienteExists(clienteId)) {
                 call.respond(HttpStatusCode.NotFound)
             }
@@ -51,7 +52,7 @@ fun Application.configureRouting() {
 }
 
 @Serializable
-class TransacaoRequest(val valor: Int, val tipo: String, val descricao: String?)
+class TransacaoRequest(val valor: String, val tipo: String, val descricao: String?)
 @Serializable
 class SaldoResponse(val limite: Int, val saldo: Int)
 @Serializable
