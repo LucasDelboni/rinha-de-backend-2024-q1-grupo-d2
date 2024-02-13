@@ -8,4 +8,5 @@ Monitorar:
 `docker stats`
 
 Version 1
-![Screenshot from 2024-02-13 16-17-18](https://github.com/LucasDelboni/rinha-de-backend-2024-q1-grupo-d2/assets/4420675/8f269570-8065-4cd3-94f6-6a4215c138f9)
+![Screenshot from 2024-02-13 18-10-26](https://github.com/LucasDelboni/rinha-de-backend-2024-q1-grupo-d2/assets/4420675/a2c0b158-08a4-45fa-beda-3179b80efac1)
+
