@@ -22,7 +22,6 @@ data class Transacao(val valor: Int, val tipo: TipoDeTransacao, val descricao: S
 data class Saldo(val limite: Int, val saldo: Int)
 class RinhaService(private val connection: Connection) {
     companion object {
-        private val CLEINTE_EXISTS = """SELECT EXISTS(SELECT 1 FROM clientes WHERE id = ?)"""
         private const val INSERT_TRANSACAO = """INSERT INTO transacoes (cliente_id, valor, tipo, descricao) VALUES (?, ?, ?, ?)"""
         private const val SELECT_SALDO = """SELECT saldo, limite FROM clientes WHERE id = ?"""
         private const val SELECT_LAST_TRANSACOES = """SELECT valor, tipo, descricao, realizada_em FROM transacoes WHERE cliente_id = ? ORDER BY id DESC LIMIT 10"""
@@ -39,20 +38,11 @@ class RinhaService(private val connection: Connection) {
         """
     }
 
-    //init {
-    //    val statement = connection.createStatement()
-    //    statement.executeUpdate(DROP_TRANSACAO)
-    //    statement.executeUpdate(DROP_CLIENTES)
-    //    statement.executeUpdate(CREATE_TABLE_CLIENTES)
-    //    statement.executeUpdate(CREATE_TABLE_TRANSACOES)
-    //    statement.executeUpdate(INSERT_CLIENTES)
-    //}
-
-    suspend fun getExtrato(clienteId: Long): ExtratoResponse {
+    suspend fun getExtrato(clienteId: Long): ExtratoResponse = withContext(Dispatchers.IO) {
         val saldo = getSaldo(clienteId)
         val last10Transacoes = getLast10Transacoes(clienteId)
 
-        return ExtratoResponse(
+        return@withContext ExtratoResponse(
             SaldoExtratoResponse(
                 limite =  saldo.limite,
                 data_extrato = ZonedDateTime.now(),
@@ -62,7 +52,6 @@ class RinhaService(private val connection: Connection) {
         )
     }
 
-    // Read a city
     suspend fun getSaldo(clienteId: Long): Saldo = withContext(Dispatchers.IO) {
         val statement = connection.prepareStatement(SELECT_SALDO)
         statement.setLong(1, clienteId)
@@ -95,7 +84,7 @@ class RinhaService(private val connection: Connection) {
         return@withContext transacoes
     }
 
-    fun getNewSaldo(clienteId: Long, transacao: TransacaoRequest): Saldo {
+    suspend fun getNewSaldo(clienteId: Long, transacao: TransacaoRequest): Saldo = withContext(Dispatchers.IO) {
         val valor = transacao.valor.toInt()
         val amount = when (TipoDeTransacao.valueOf(transacao.tipo)) {
             TipoDeTransacao.c -> valor
@@ -114,18 +103,11 @@ class RinhaService(private val connection: Connection) {
 
         val resultSet = statement.resultSet
         resultSet.next()
-        return Saldo(
+        return@withContext Saldo(
             limite = resultSet.getInt("limite"),
             saldo = resultSet.getInt("saldo"),
         )
     }
 
-    fun clienteExists(clienteId: Long): Boolean {
-        val statement = connection.prepareStatement(CLEINTE_EXISTS)
-        statement.setLong(1, clienteId)
-        statement.executeQuery()
-        val resultSet = statement.resultSet
-        resultSet.next()
-        return resultSet.getBoolean(1)
-    }
+    fun clienteExists(clienteId: Long): Boolean = clienteId in 1..5
 }

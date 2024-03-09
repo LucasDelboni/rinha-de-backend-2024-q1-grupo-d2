@@ -3,7 +3,6 @@ DROP TABLE IF EXISTS clientes;
 
 CREATE TABLE clientes (
 	id BIGSERIAL PRIMARY KEY,
-	nome VARCHAR(50) NOT NULL,
 	limite NUMERIC NOT NULL,
 	saldo NUMERIC NOT NULL DEFAULT 0,
 	CONSTRAINT saldo_nao_negativo check (saldo >= (limite * -1))--o que me permite usar ON CONFLICT
@@ -27,11 +26,11 @@ CREATE TABLE transacoes (
 
 DO $$
 BEGIN
-  INSERT INTO clientes (nome, limite)
+  INSERT INTO clientes (id, limite)
   VALUES
-    ('o barato sai caro', 1000 * 100),
-    ('zan corp ltda', 800 * 100),
-    ('les cruders', 10000 * 100),
-    ('padaria joia de cocaia', 100000 * 100),
-    ('kid mais', 5000 * 100);
+    (1, 1000 * 100),
+    (2, 800 * 100),
+    (3, 10000 * 100),
+    (4, 100000 * 100),
+    (5, 5000 * 100);
 END; $$
