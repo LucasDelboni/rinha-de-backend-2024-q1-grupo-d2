@@ -22,9 +22,6 @@ fun Application.configureRouting() {
             try{
                 val clienteId = call.parameters["id"]?.toLong()
                 clienteId?.let {
-                    if (!service.clienteExists(clienteId)) {
-                        call.respond(HttpStatusCode.NotFound)
-                    }
                     val extrato = service.getExtrato(clienteId)
                     call.respond(HttpStatusCode.OK, extrato)
                 } ?: call.respond(HttpStatusCode.UnprocessableEntity)
@@ -36,11 +33,8 @@ fun Application.configureRouting() {
             val clienteId = call.parameters["id"]?.toLong()
             clienteId?.let {
                 val request = call.receive<TransacaoRequest>()
-                if (request.descricao.isNullOrBlank() || request.descricao.length > 10 || request.valor.toIntOrNull() == null) {
+                if (request.descricao.isNullOrBlank()) {
                     call.respond(HttpStatusCode.UnprocessableEntity)
-                }
-                if (!service.clienteExists(clienteId)) {
-                    call.respond(HttpStatusCode.NotFound)
                 }
                 try {
                     val newSaldo = service.getNewSaldo(clienteId, request)

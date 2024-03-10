@@ -108,6 +108,4 @@ class RinhaService(private val connection: Connection) {
             saldo = resultSet.getInt("saldo"),
         )
     }
-
-    fun clienteExists(clienteId: Long): Boolean = clienteId in 1..5
 }
